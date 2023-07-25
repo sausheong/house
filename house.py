@@ -4,7 +4,7 @@ from agents import house, moderator, house_specs, moderator_specs
 
 # change the question and number of rounds
 question = "Should AI be regulated?"
-number_of_rounds = 2
+number_of_rounds = 3
 
 # a quick function to get the name of file
 def get_name_from_question(question):
@@ -29,6 +29,7 @@ file = open(f"conversation-{name}.md", "a")
 file.write(f"# {question}\n\n")
 
 # introducing the participants
+file.write(f"\n\n## Moderator ({moderator_specs.provider} - {moderator_specs.model_name})\n")
 response = moderator.run(f"Introduce the participants of the debate: \
                 {', '.join(str(spec.persona) for spec in house_specs)}")
 file.write(response)
@@ -40,8 +41,6 @@ for _ in range(number_of_rounds):
         so_far = moderator.run(f"Summarise the following conversation in \
             less than 200 words for the next participant, assuming the next \
             participant is {spec.persona}: {conversation}")
-        file.write(f"\n\n## Moderator ({moderator_specs.provider} - {moderator_specs.model_name})\n")
-        file.write(so_far)
         response = agent.run(so_far)
         file.write(f"\n\n## {spec.persona} ({spec.provider} - {spec.model_name})\n")
         file.write(response)

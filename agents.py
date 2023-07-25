@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 from langchain.tools import DuckDuckGoSearchRun
 from langchain.memory import ConversationBufferMemory
-from langchain.agents import initialize_agent, AgentType, load_tools
+from langchain.agents import initialize_agent, AgentType
 from langchain.chat_models import AzureChatOpenAI, ChatVertexAI, ChatOpenAI
 from langchain.llms import OpenAI, AzureOpenAI, VertexAI
 
@@ -16,7 +16,7 @@ azure_api_version=os.getenv('AZURE_API_VERSION')
 azure_base_url=os.getenv('AZURE_API_BASE')
 model_name=os.getenv('PALM_MODEL')
 location=os.getenv('PALM_LOCATION')
-max_tokens=int(os.getenv('MAX_TOKENS', 128))
+max_tokens=int(os.getenv('MAX_TOKENS', 196))
 max_retries=int(os.getenv('MAX_RETRIES', 3)) 
 
 # we only use the search tool here, but you can add other tools
@@ -24,7 +24,7 @@ def get_tools():
     search_tool = DuckDuckGoSearchRun()
     return [
         search_tool,
-    ] + load_tools(["requests_all"])    
+    ]
 
 # setting up the LLM to use, add other LLMs later
 def get_llm(provider, model_name, max_tokens_generated):
@@ -92,6 +92,9 @@ def get_llm(provider, model_name, max_tokens_generated):
     
     return llm
 
+def _handle_error(error) -> str:
+    return str(error).split('`')[1]
+
 # create the agent
 def create_agent(specs: Specification):
     # persona has a larger number of tokens
@@ -106,7 +109,7 @@ def create_agent(specs: Specification):
         agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
         memory=ConversationBufferMemory(memory_key="chat_history", 
             return_messages=True, ai_prefix=specs.persona, human_prefix="Moderator"),
-        handle_parsing_errors="Check output and make sure it conforms to format. Remove backticks.",
+        handle_parsing_errors=_handle_error,
         verbose=True,
     )
     agent.run(specs.context)
